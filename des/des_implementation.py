@@ -4,21 +4,16 @@ from PIL import Image
 import io
 
 
-def base64_img_encoding(path):
+def img_to_bytes(path):
     with open(path, "rb") as image_file:
         image_bytes = image_file.read()
-        encoded = base64.b64encode(image_bytes)
-    return encoded
-
-
-def base64_img_decoding(encoded_string):
-    decoded_string = base64.b64decode(encoded_string)
-    return decoded_string
+    return image_bytes
 
 
 def main():
-    base64_enc_image = base64_img_encoding("puppy.jpg")
-    print(f"First 10 base64 characters of the original image: {base64_enc_image[:10]}")
+    # IMAGE TO BYTES
+    bytes_img = img_to_bytes("puppy.jpg")
+    print(f"First 10 bytes of the original image: {bytes_img[:10]}")
 
     des = pyDes.des(
         b"password",
@@ -28,13 +23,40 @@ def main():
         padmode=pyDes.PAD_PKCS5,
     )
 
-    enc_image = des.encrypt(base64_enc_image)
-    print(f"First 10 characters of the encoded image: {enc_image[:10]}")
-    dec_image = des.decrypt(enc_image)
-    print(f"First 10 base64 characters of the decoded image: {dec_image[:10]}")
+    # IMAGE BYTES TO ENCRYPTED BYTES
+    enc_bytes_img = des.encrypt(bytes_img)
+    print(f"First 10 enc with DES bytes of the image: {enc_bytes_img[:10]}")
 
-    raw_image_bytes = base64_img_decoding(dec_image)
-    image = Image.open(io.BytesIO(raw_image_bytes))
+    # ENCRYPTED BYTES TO BASE64
+    base64_enc_bytes_img = base64.b64encode(enc_bytes_img)
+    print(
+        f"First 10 base64 encoded chars of the enc bytes of the image: {base64_enc_bytes_img[:10]}"
+    )
+
+    # BASE64 TO BITS
+    bits_enc_img = "".join(format(byte, "08b") for byte in base64_enc_bytes_img)
+    print(f"First 10 bits of the enc image: {bits_enc_img[:10]}")
+
+    # BITS TO BASE64
+    base64_enc_bytes_img = bytes(
+        int(bits_enc_img[i : i + 8], 2) for i in range(0, len(bits_enc_img), 8)
+    )
+    print(
+        f"First 10 base64 encoded chars of the enc bytes of the image: {base64_enc_bytes_img[:10]}"
+    )
+
+    # BASE64 TO BYTES
+    enc_bytes_img = base64.b64decode(base64_enc_bytes_img)
+    print(
+        f"First 10 base64 decoded chars of the enc bytes of the image: {enc_bytes_img[:10]}"
+    )
+
+    # ENC BYTES TO DEC BYTES
+    dec_bytes_img = des.decrypt(enc_bytes_img)
+    print(f"First 10 bytes dec with DES bytes of the image: {dec_bytes_img[:10]}")
+
+    # OPEN IMAGE
+    image = Image.open(io.BytesIO(dec_bytes_img))
     image.show()
 
 
