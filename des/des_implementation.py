@@ -2,6 +2,7 @@ import base64
 import pyDes
 from PIL import Image
 import io
+import argparse
 
 
 def img_to_bytes(path):
@@ -11,8 +12,12 @@ def img_to_bytes(path):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Img path receiver")
+    parser.add_argument("input", help="Input image")
+    args = parser.parse_args()
+
     # IMAGE TO BYTES
-    bytes_img = img_to_bytes("puppy.jpg")
+    bytes_img = img_to_bytes(args.input)
     print(f"First 10 bytes of the original image: {bytes_img[:10]}")
 
     des = pyDes.des(
